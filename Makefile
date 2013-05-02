@@ -1,3 +1,5 @@
+# PKG_CONFIG_PATH must be exported to find libmapper-0.pc
+
 DISTDIR 	:= .
 LMCFLAGS    := $(shell pkg-config --cflags libmapper-0)
 LMLIBS      := $(shell pkg-config --libs libmapper-0)
