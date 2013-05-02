@@ -1,4 +1,3 @@
-#include "mapper_internal.h"
 #include <mapper/mapper.h>
 #include <stdio.h>
 #include <string.h>

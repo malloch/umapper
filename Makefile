@@ -1,21 +1,21 @@
 DISTDIR 	:= .
-LIBDIR   := ../libmapper-install/lib/
-LIBSRC := ./../libmapper/src/.libs
-INCLUDE_DIR := ../libmapper-install/include/mapper-0/
+LMCFLAGS    := $(shell pkg-config --cflags libmapper-0)
+LMLIBS      := $(shell pkg-config --libs libmapper-0)
 CFLAGS		:= -O3 -Wall -fomit-frame-pointer -fstrength-reduce -funroll-loops -ffast-math -c -fPIC -DPIC
-LDFLAGS		:=	$(LIBSRC)/*.o -llo -lz
-INCLUDE		:= 	-I. -I$(INCLUDE_DIR) -I./../libmapper/src -L./$(LIBDIR)
+LDFLAGS		:=	$(LMLIBS) -lz
+INCLUDE		:= 	-I. $(LMCFLAGS)
 
 FILES 	:= umapper
 
 all: $(FILES)
 
 umapper: umapper.o  umapper-verbose.o umapper-connections.o
-	gcc $(LDFLAGS) \
+	gcc \
 	   umapper.o \
 	  umapper-connections.o \
 	  umapper-verbose.o -o \
-	  $(DISTDIR)/umapper
+	  $(DISTDIR)/umapper \
+	  $(LDFLAGS)
 
 umapper.o: umapper.c
 	gcc $(INCLUDE) umapper.c -c -gstabs -o $(DISTDIR)/umapper.o $(CFLAGS)

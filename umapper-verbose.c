@@ -1,7 +1,10 @@
-#include "mapper_internal.h"
+
 #include <mapper/mapper.h>
 #include <stdio.h>
 #include <string.h>
+#include <assert.h>
+
+#define die_unless(a, ...) { if (!(a)) { printf("-- " __VA_ARGS__); assert(a); } }
 
 void print_version(){
    printf("Ugly Mapper v 0.01\n");
