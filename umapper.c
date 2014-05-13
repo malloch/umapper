@@ -200,64 +200,67 @@ int main(int argc, char * argv[])
          connections_arg = 1;
          list_devices();
          break;
-   }
+    }
 
+    if (mon)
+        mapper_monitor_free(mon);
     return 0;
 }
 
-void create_monitor(void){
-    mon = mapper_monitor_new(0, 1);
+void create_monitor(void) {
+    mon = mapper_monitor_new(0, SUB_DEVICE_ALL);
     if (!mon)
         exit(0);
     db = mapper_monitor_get_db(mon);
 }
 
-void list_devices(void){
-   mapper_db_device *pdev = mapper_db_get_all_devices(db);
-   if(pdev)
-      printf("Device:\n");
-   while (pdev) {
-      mapper_db_device dev = *pdev;
-      print_device(dev, full_detail_arg);
+void list_devices(void) {
+    mapper_db_device *pdev = mapper_db_get_all_devices(db);
+    if(pdev)
+        printf("Device:\n");
+    while (pdev) {
+        mapper_db_device dev = *pdev;
+        print_device(dev, full_detail_arg);
 
-      if(links_arg){
-         mapper_db_link * link = mapper_db_get_links_by_device_name(db, dev->name);
-         if(link)
-            printf("\tLink:\n");
-         while(link){
-            print_link(*link, full_detail_arg);
-            link = mapper_db_link_next(link);
-         }
-      }
-      if(signals_arg){
-         mapper_db_signal *signal = mapper_db_get_inputs_by_device_name(db,
-            dev->name);
-         if(signal)
-            printf("\t Input Signal:\n");
-         while(signal){
-            print_signal(*signal, full_detail_arg);
-            signal = mapper_db_signal_next(signal);
-         }
-         signal = mapper_db_get_outputs_by_device_name(db, dev->name);
-         if(signal)
-            printf("\t Output Signal:\n");
-         while(signal){
-            print_signal(*signal, full_detail_arg);
-            if(connections_arg){
-               mapper_db_connection * conn 
-                  = mapper_db_get_connections_by_src_signal_name(db, (*signal)->name);
-               if(conn)
-                  printf("\t\tConnection:\n");
-               while(conn){
-                  print_connection(*conn, full_detail_arg);
-               conn = mapper_db_connection_next(conn);
-               }
+        if(links_arg) {
+            mapper_db_link * link =
+                mapper_db_get_links_by_device_name(db, dev->name);
+            if(link)
+                printf("\tLinks:\n");
+            while(link) {
+                print_link(*link, full_detail_arg);
+                link = mapper_db_link_next(link);
             }
-            signal = mapper_db_signal_next(signal);
-         }
-      }
-      printf("\n");
-      pdev = mapper_db_device_next(pdev);
-   }
+        }
+        if(signals_arg) {
+            mapper_db_signal *signal =
+            mapper_db_get_inputs_by_device_name(db, dev->name);
+            if(signal)
+                printf("\tInput Signals:\n");
+            while(signal) {
+                print_signal(*signal, full_detail_arg);
+                signal = mapper_db_signal_next(signal);
+            }
+            signal = mapper_db_get_outputs_by_device_name(db, dev->name);
+            if(signal)
+                printf("\tOutput Signals:\n");
+            while(signal){
+                print_signal(*signal, full_detail_arg);
+                if(connections_arg){
+                    mapper_db_connection *conn
+                        = mapper_db_get_connections_by_src_signal_name(db, (*signal)->name);
+                    if(conn)
+                        printf("\t\tConnections:\n");
+                    while(conn){
+                        print_connection(*conn, full_detail_arg);
+                        conn = mapper_db_connection_next(conn);
+                    }
+                }
+                signal = mapper_db_signal_next(signal);
+            }
+        }
+        printf("\n");
+        pdev = mapper_db_device_next(pdev);
+    }
 }
 
