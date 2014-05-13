@@ -20,13 +20,13 @@ umapper: umapper.o  umapper-verbose.o umapper-connections.o
 	  $(LDFLAGS)
 
 umapper.o: umapper.c
-	gcc $(INCLUDE) umapper.c -c -gstabs -o $(DISTDIR)/umapper.o $(CFLAGS)
+	gcc $(INCLUDE) umapper.c -c -o $(DISTDIR)/umapper.o $(CFLAGS)
 
 umapper-verbose.o: umapper-verbose.c
-	gcc $(INCLUDE) umapper-verbose.c -c -gstabs -o $(DISTDIR)/umapper-verbose.o $(CFLAGS)
+	gcc $(INCLUDE) umapper-verbose.c -c -o $(DISTDIR)/umapper-verbose.o $(CFLAGS)
 
 umapper-connections.o: umapper-connections.c
-	gcc $(INCLUDE) umapper-connections.c -c -gstabs -o $(DISTDIR)/umapper-connections.o $(CFLAGS)
+	gcc $(INCLUDE) umapper-connections.c -c -o $(DISTDIR)/umapper-connections.o $(CFLAGS)
 
 clean:
 	rm -rf umapper.o
