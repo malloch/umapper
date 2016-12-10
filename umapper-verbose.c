@@ -12,108 +12,65 @@ void print_version(){
 
 void print_help(){
     print_version();
-    printf("An ugly front-end to libmapper mapping.\n");
+    printf("An ugly front-end to libmapper mapping network.\n");
     printf("Usage:\n");
     printf("\t-h\t--help\t\t\t\t\tPrint this help\n");
     printf("\t-v\t--version\t\t\t\tPrint version\n");
-    printf("\t-a\t--all\t\t\t\t\tList devices, links, connections and signals\n");
+    printf("\t-a\t--all\t\t\t\t\tList devices, signals, and maps\n");
     printf("\t-f\t--full\t\t\t\t\tList all details\n");
     printf("\n");
     printf("\t-d\t--device\t\t\t\tList only devices\n");
     printf("\t-s\t--signal\t\t\t\tList devices with signals\n");
-    printf("\t-l\t--link\t\t\t\t\tList devices and links\n");
-    printf("\t-c\t--connection\t\t\t\tList devices, links, signals and connections\n");
+    printf("\t-m\t--map\t\t\t\t\tList devices, signals and maps\n");
     printf("\n");
-    printf("\t-C\t--connect_signal source dest\t\tConnect source signal to dest signal.\n");
-    printf("\t-D\t--disconnect_signal source dest\t\tDisconnect source signal to dest signal.\n");
-    printf("\n");
-    printf("\t-L\t--link_device source dest\t\tLink source device to dest device.\n");
-    printf("\t-U\t--unlink_device source dest\t\tUnink source device to dest device.\n");
+    printf("\t-M\t--map_signals source dest\t\tMap source signal to dest signal.\n");
+    printf("\t-U\t--unmap_signals source dest\t\tUnmap source signal to dest signal.\n");
     printf("\n");
     printf("Example:\n");
     printf("\tumapper -l -f\n");
 }
 
-void print_device(mapper_db_device dev, int details){
-    printf("\t%s", dev->name);
-    if(!details){
-        printf("\n");
-        return;
-    }
-    int i=0;
-    const char *key;
-    char type;
-    const void *val;
-    int length;
-    while (!mapper_db_device_property_index(dev, i++, &key, &type, &val, &length)){
-        printf(", %s=", key);
-        mapper_prop_pp(type, length, val);
+void print_device(mapper_device dev, int details) {
+    printf("\t");
+    if (details)
+        mapper_device_print(dev);
+    else
+        printf("%s", mapper_device_name(dev));
+    printf("\n");
+}
+
+void print_map(mapper_map map, int details) {
+    printf("\t\t\t");
+    if (details)
+        mapper_map_print(map);
+    else {
+        mapper_device dev;
+        mapper_signal sig;
+        mapper_slot slot;
+        int i, num_src = mapper_map_num_sources(map);
+        if (num_src > 1)
+            printf("[");
+        for (i = 0; i < num_src; i++) {
+            slot = mapper_map_slot(map, MAPPER_LOC_SOURCE, i);
+            sig = mapper_slot_signal(slot);
+            dev = mapper_signal_device(sig);
+            printf("%s/%s, ", mapper_device_name(dev), mapper_signal_name(sig));
+        }
+        slot = mapper_map_slot(map, MAPPER_LOC_DESTINATION, 0);
+        sig = mapper_slot_signal(slot);
+        dev = mapper_signal_device(sig);
+        printf("\b\b%s -> %s/%s", num_src > 1 ? "]" : "",
+               mapper_device_name(dev), mapper_signal_name(sig));
     }
     printf("\n");
 }
 
-void print_connection(mapper_db_connection con, int details){
-    printf("\t\t\t%s -> %s ", con->src_name, con->dest_name);
-    if(!details){
-        printf("\n");
-        return;
-    }
-    int i=0;
-    const char *key;
-    char type;
-    const void *val;
-    int length;
-    while(!mapper_db_connection_property_index(con, i++, &key, &type, &val, &length)){
-        die_unless(val!=0, "returned zero value\n");
-        printf(", %s=", key);
-        mapper_prop_pp(type, length, val);
-    }
-    printf("\n");
-}
-
-void print_signal(mapper_db_signal sig, int details){
-    printf("\t\t%s%s ", sig->device_name, sig->name);
-    if(!details){
-        printf("\n");
-        return;
-    }
-    int i=0;
-    const char *key;
-    char type;
-    const void *val;
-    int length;
-    while(!mapper_db_signal_property_index(sig, i++, &key, &type, &val, &length))
-    {
-        die_unless(val!=0, "returned zero value\n");
-
-        // already printed these
-        if (strcmp(key, "device_name")==0
-            || strcmp(key, "name")==0
-            || strcmp(key, "direction")==0)
-            continue;
-
-        printf(", %s=", key);
-        mapper_prop_pp(type, length, val);
-    }
-    printf("\n");
-
-}
-
-void print_link(mapper_db_link lnk, int details){
-    printf("\t\t%s -> %s ", lnk->src_name, lnk->dest_name);
-    if(!details){
-        printf("\n");
-        return;
-    }
-    int i=0;
-    const char *key;
-    char type;
-    const void *val;
-    int length;
-    while (!mapper_db_link_property_index(lnk, i++, &key, &type, &val, &length)){
-        printf(", %s=", key);
-        mapper_prop_pp(type, length, val);
-    }
+void print_signal(mapper_signal sig, int details) {
+    printf("\t\t");
+    if (details)
+        mapper_signal_print(sig, 1);
+    else
+        printf("%s ", mapper_signal_name(sig));
     printf("\n");
 }
 
