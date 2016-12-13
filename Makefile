@@ -3,7 +3,7 @@
 DISTDIR 	:= .
 LMCFLAGS    := $(shell pkg-config --cflags libmapper-0)
 LMLIBS      := $(shell pkg-config --libs libmapper-0)
-CFLAGS		:= -O3 -Wall -fomit-frame-pointer -fstrength-reduce -funroll-loops -ffast-math -c -fPIC -DPIC
+CFLAGS		:= -O3 -Wall -fomit-frame-pointer -funroll-loops -ffast-math -c -fPIC -DPIC
 LDFLAGS		:=	$(LMLIBS) -lz
 INCLUDE		:= 	-I. $(LMCFLAGS)
 

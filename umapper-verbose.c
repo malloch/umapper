@@ -40,11 +40,11 @@ void print_device(mapper_db_device dev, int details){
       printf("\n");
       return;
    }
-   int i=0;
+   int i=0, len;
    const char *key;
-   lo_type type;
-   const lo_arg *val;
-   while (!mapper_db_device_property_index(dev, i++, &key, &type, &val)){
+   char type;
+   const void *val;
+   while (!mapper_db_device_property_index(dev, i++, &key, &type, &val, &len)){
       printf(", %s=", key);
       lo_arg_pp(type, (lo_arg*)val);
    }
@@ -57,11 +57,11 @@ void print_connection(mapper_db_connection con, int details){
       printf("\n");
       return;
    }
-    int i=0;
+    int i=0, len;
     const char *key;
-    lo_type type;
-    const lo_arg *val;
-    while(!mapper_db_connection_property_index(con, i++, &key, &type, &val)){
+    char type;
+    const void *val;
+    while(!mapper_db_connection_property_index(con, i++, &key, &type, &val, &len)){
         die_unless(val!=0, "returned zero value\n");
         printf(", %s=", key);
         lo_arg_pp(type, (lo_arg*)val);
@@ -76,12 +76,11 @@ void print_signal(mapper_db_signal sig, int details){
       printf("\n");
       return;
    }
-    int i=0;
+    int i=0, len;
     const char *key;
-    lo_type type;
-    const lo_arg *val;
-    while(!mapper_db_signal_property_index(
-              sig, i++, &key, &type, &val))
+    char type;
+    const void *val;
+    while(!mapper_db_signal_property_index(sig, i++, &key, &type, &val, &len))
     {
         die_unless(val!=0, "returned zero value\n");
 
@@ -104,11 +103,11 @@ void print_link(mapper_db_link lnk, int details){
       printf("\n");
       return;
    }
-   int i=0;
+   int i=0, len;
    const char *key;
-   lo_type type;
-   const lo_arg *val;
-   while (!mapper_db_link_property_index(lnk, i++, &key, &type, &val)){
+   char type;
+   const void *val;
+   while (!mapper_db_link_property_index(lnk, i++, &key, &type, &val, &len)){
       printf(", %s=", key);
       lo_arg_pp(type, (lo_arg*)val);
    }
