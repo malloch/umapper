@@ -31,7 +31,7 @@ void print_help(){
 }
 
 void print_device(mapper_device dev, int details) {
-    printf("\t");
+    printf("    ");
     if (details)
         mapper_device_print(dev);
     else
@@ -40,7 +40,7 @@ void print_device(mapper_device dev, int details) {
 }
 
 void print_map(mapper_map map, int details) {
-    printf("\t\t\t");
+    printf("                     ");
     if (details)
         mapper_map_print(map);
     else {
@@ -66,7 +66,7 @@ void print_map(mapper_map map, int details) {
 }
 
 void print_signal(mapper_signal sig, int details) {
-    printf("\t\t");
+    printf("            ");
     if (details)
         mapper_signal_print(sig, 1);
     else

@@ -51,63 +51,6 @@ int maps_arg = 0;
 char src_name[256];
 char dst_name[256];
 
-void on_device(mapper_database db, mapper_device dev, mapper_record_action a,
-               const void *user)
-{
-    if (a == MAPPER_ADDED) {
-        printf("new device! '%s'\n", mapper_device_name(dev));
-        mapper_device_print(dev);
-        if (mapper_device_property(dev, "foo", 0, 0, 0)) {
-            printf("device has NO prop 'foo'\n");
-            const char *bar = "bar";
-            mapper_device_set_property(dev, "foo", 1, 's', bar);
-        }
-        else {
-            printf("device has prop 'foo'\n");
-            mapper_device_remove_property(dev, "foo");
-        }
-        mapper_device_push(dev);
-    }
-}
-
-void on_signal(mapper_database db, mapper_signal sig, mapper_record_action a,
-               const void *user)
-{
-    if (a == MAPPER_ADDED) {
-        printf("new signal! '%s'\n", mapper_signal_name(sig));
-//        const char *bar = "bar";
-//        mapper_signal_set_property(sig, "sigfoo5", 1, 's', bar);
-//        mapper_signal_remove_property(sig, "sigfoo4");
-//        mapper_signal_push(sig);
-    }
-}
-
-void on_link(mapper_database db, mapper_link lnk, mapper_record_action a,
-             const void *user)
-{
-    if (a == MAPPER_ADDED) {
-        printf("new link!\n");
-//        mapper_link_print(lnk);
-        const char *bar = "bar";
-        mapper_link_set_property(lnk, "linkfoo5", 1, 's', bar);
-        mapper_link_remove_property(lnk, "linkfoo4");
-        mapper_link_push(lnk);
-    }
-}
-
-void on_map(mapper_database db, mapper_map map, mapper_record_action a,
-            const void *user)
-{
-    if (a == MAPPER_ADDED) {
-        printf("new map!\n");
-//        mapper_map_print(map);
-//        const char *bar = "bar";
-//        mapper_map_set_property(map, "mapfoo1", 1, 's', bar);
-//        mapper_map_remove_property(map, "mapfoo2");
-//        mapper_map_push(map);
-    }
-}
-
 int main(int argc, char * argv[])
 {
     if (argc == 1){
@@ -116,6 +59,8 @@ int main(int argc, char * argv[])
     }
 
     create_db();
+    if (!db)
+        return 1;
 
     int c;
     int option_index = 0;
@@ -182,9 +127,10 @@ int main(int argc, char * argv[])
         option_index = 0;
     }
 
+    mapper_database_poll(db, 1000);
+
     switch(option) {
         case UMAPPER_PRINT: {
-            mapper_database_poll(db, 1000);
             list_devices();
         }
             break;
@@ -195,24 +141,27 @@ int main(int argc, char * argv[])
                 slash[0] = '\0';
                 mapper_device dev = mapper_database_device_by_name(db, src_name);
                 if (dev)
-                    src = mapper_device_signal_by_name(db, slash+1);
+                    src = mapper_device_signal_by_name(dev, slash+1);
             }
-            if (!src)
+            if (!src) {
+                printf("error(map): source signal '%s:%s' not found.\n",
+                       src_name, slash+1);
                 break;
+            }
             slash = (char*)strchr(dst_name+1, '/');
             if (slash) {
                 slash[0] = '\0';
                 mapper_device dev = mapper_database_device_by_name(db, dst_name);
                 if (dev)
-                    dst = mapper_device_signal_by_name(db, slash+1);
+                    dst = mapper_device_signal_by_name(dev, slash+1);
             }
-            if (src && dst) {
-                mapper_map map = mapper_map_new(1, &src, dst);
-                mapper_map_push(map);
+            if (!dst) {
+                printf("error(map): destination signal '%s:%s' not found.\n",
+                       dst_name, slash+1);
+                break;
             }
-            mapper_database_poll(db, 500);
-            maps_arg = 1;
-            list_devices();
+            mapper_map map = mapper_map_new(1, &src, dst);
+            mapper_map_push(map);
         }
             break;
         case UMAPPER_UNMAP: {
@@ -222,29 +171,44 @@ int main(int argc, char * argv[])
                 slash[0] = '\0';
                 mapper_device dev = mapper_database_device_by_name(db, src_name);
                 if (dev)
-                    src = mapper_device_signal_by_name(db, slash+1);
+                    src = mapper_device_signal_by_name(dev, slash+1);
             }
-            if (!src)
+            if (!src) {
+                printf("error(unmap): source signal '%s:%s' not found.\n",
+                       src_name, slash+1);
                 break;
+            }
             slash = (char*)strchr(dst_name+1, '/');
             if (slash) {
                 slash[0] = '\0';
                 mapper_device dev = mapper_database_device_by_name(db, dst_name);
                 if (dev)
-                    dst = mapper_device_signal_by_name(db, slash+1);
+                    dst = mapper_device_signal_by_name(dev, slash+1);
             }
-            if (src && dst) {
-                mapper_map *out = mapper_signal_maps(src, MAPPER_DIR_OUTGOING);
-                mapper_map *in = mapper_signal_maps(dst, MAPPER_DIR_INCOMING);
-                mapper_map *both = mapper_map_query_intersection(out, in);
-                while (both) {
-                    mapper_map_release(*both);
-                    both = mapper_map_query_next(both);
-                }
+            if (!dst) {
+                printf("error(unmap): destination signal '%s:%s' not found.\n",
+                       dst_name, slash+1);
+                break;
             }
-            mapper_database_poll(db, 500);
-            maps_arg = 1;
-            list_devices();
+            mapper_map *out = mapper_signal_maps(src, MAPPER_DIR_OUTGOING);
+            if (!out) {
+                printf("error(unmap): source signal has no outgoing maps.\n");
+                break;
+            }
+            mapper_map *in = mapper_signal_maps(dst, MAPPER_DIR_INCOMING);
+            if (!in) {
+                printf("error(unmap): destination signal has no incoming maps.\n");
+                break;
+            }
+            mapper_map *both = mapper_map_query_intersection(out, in);
+            if (!both) {
+                printf("error(unmap): no maps found from '%s:%s' to '%s:%s'.\n",
+                       src_name, mapper_signal_name(src), dst_name, slash+1);
+            }
+            while (both) {
+                mapper_map_release(*both);
+                both = mapper_map_query_next(both);
+            }
         }
             break;
     }
@@ -258,19 +222,14 @@ void create_db(void) {
     db = mapper_database_new(0, MAPPER_OBJ_ALL);
     if (!db)
         exit(0);
-    mapper_database_add_device_callback(db, on_device, 0);
-    mapper_database_add_signal_callback(db, on_signal, 0);
-    mapper_database_add_link_callback(db, on_link, 0);
-    mapper_database_add_map_callback(db, on_map, 0);
     mapper_database_request_devices(db);
     mapper_database_poll(db, 100);
 }
 
 void list_devices(void) {
-    printf("list_devices()\n");
     mapper_device *devs = mapper_database_devices(db);
     if (devs)
-        printf("Device:\n");
+        printf("Devices:\n");
     while (devs) {
         mapper_device dev = *devs;
         print_device(dev, full_detail_arg);
@@ -278,20 +237,20 @@ void list_devices(void) {
         if (signals_arg) {
             mapper_signal *sigs = mapper_device_signals(dev, MAPPER_DIR_INCOMING);
             if (sigs)
-                printf("\tInput Signals:\n");
+                printf("        input signals:\n");
             while (sigs) {
                 print_signal(*sigs, full_detail_arg);
                 sigs = mapper_signal_query_next(sigs);
             }
             sigs = mapper_device_signals(dev, MAPPER_DIR_OUTGOING);
             if (sigs)
-                printf("\tOutput Signals:\n");
+                printf("        output signals:\n");
             while (sigs){
                 print_signal(*sigs, full_detail_arg);
                 if (maps_arg){
                     mapper_map *maps = mapper_signal_maps(*sigs, MAPPER_DIR_OUTGOING);
                     if (maps)
-                        printf("\t\tMaps:\n");
+                        printf("                Maps:\n");
                     while (maps){
                         print_map(*maps, full_detail_arg);
                         maps = mapper_map_query_next(maps);
