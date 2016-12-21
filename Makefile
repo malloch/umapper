@@ -11,10 +11,9 @@ FILES 	:= umapper
 
 all: $(FILES)
 
-umapper: umapper.o  umapper-verbose.o umapper-connections.o
+umapper: umapper.o  umapper-verbose.o
 	gcc \
-	   umapper.o \
-	  umapper-connections.o \
+	  umapper.o \
 	  umapper-verbose.o -o \
 	  $(DISTDIR)/umapper \
 	  $(LDFLAGS)
@@ -25,11 +24,7 @@ umapper.o: umapper.c
 umapper-verbose.o: umapper-verbose.c
 	gcc $(INCLUDE) umapper-verbose.c -c -o $(DISTDIR)/umapper-verbose.o $(CFLAGS)
 
-umapper-connections.o: umapper-connections.c
-	gcc $(INCLUDE) umapper-connections.c -c -o $(DISTDIR)/umapper-connections.o $(CFLAGS)
-
 clean:
 	rm -rf umapper.o
 	rm -rf umapper-verbose.o
-	rm -rf umapper-connections.o
 	rm -rf umapper
