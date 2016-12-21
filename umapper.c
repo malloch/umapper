@@ -160,7 +160,7 @@ int main(int argc, char * argv[])
                        dst_name, slash+1);
                 break;
             }
-            mapper_map map = mapper_map_new(1, &src, dst);
+            mapper_map map = mapper_map_new(1, &src, 1, &dst);
             mapper_map_push(map);
         }
             break;
