@@ -7,7 +7,7 @@
 #define die_unless(a, ...) { if (!(a)) { printf("-- " __VA_ARGS__); assert(a); } }
 
 void print_version(){
-    printf("Ugly Mapper v 0.01\n");
+    printf("µMapper v 0.02\n");
 }
 
 void print_help(){

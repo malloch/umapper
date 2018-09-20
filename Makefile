@@ -1,8 +1,8 @@
-# PKG_CONFIG_PATH must be exported to find libmapper-0.pc
+# PKG_CONFIG_PATH must be exported to find libmapper.pc
 
 DISTDIR 	:= .
-LMCFLAGS    := $(shell pkg-config --cflags libmapper-0)
-LMLIBS      := $(shell pkg-config --libs libmapper-0)
+LMCFLAGS    := $(shell pkg-config --cflags libmapper)
+LMLIBS      := $(shell pkg-config --libs libmapper)
 CFLAGS		:= -O3 -Wall -fomit-frame-pointer -funroll-loops -ffast-math -c -fPIC -DPIC
 LDFLAGS		:=	$(LMLIBS) -lz
 INCLUDE		:= 	-I. $(LMCFLAGS)
