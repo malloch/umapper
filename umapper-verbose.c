@@ -33,34 +33,35 @@ void print_help(){
 void print_device(mapper_device dev, int details) {
     printf("    ");
     if (details)
-        mapper_device_print(dev);
-    else
-        printf("%s", mapper_device_name(dev));
-    printf("\n");
+        mapper_object_print(dev, 0);
+    else {
+        printf("%s", mapper_object_get_prop_str(dev, MAPPER_PROP_NAME, NULL));
+        printf("\n");
+    }
 }
 
 void print_map(mapper_map map, int details) {
     printf("                     ");
     if (details)
-        mapper_map_print(map);
+        mapper_object_print(map, 0);
     else {
         mapper_device dev;
         mapper_signal sig;
-        mapper_slot slot;
-        int i, num_src = mapper_map_num_sources(map);
+        int i, num_src = mapper_map_get_num_signals(map, MAPPER_LOC_SRC);
         if (num_src > 1)
             printf("[");
         for (i = 0; i < num_src; i++) {
-            slot = mapper_map_slot(map, MAPPER_LOC_SOURCE, i);
-            sig = mapper_slot_signal(slot);
-            dev = mapper_signal_device(sig);
-            printf("%s/%s, ", mapper_device_name(dev), mapper_signal_name(sig));
+            sig = mapper_map_get_signal(map, MAPPER_LOC_SRC, i);
+            dev = mapper_signal_get_device(sig);
+            printf("%s/%s, ",
+                   mapper_object_get_prop_str(dev, MAPPER_PROP_NAME, NULL),
+                   mapper_object_get_prop_str(sig, MAPPER_PROP_NAME, NULL));
         }
-        slot = mapper_map_slot(map, MAPPER_LOC_DESTINATION, 0);
-        sig = mapper_slot_signal(slot);
-        dev = mapper_signal_device(sig);
+        sig = mapper_map_get_signal(map, MAPPER_LOC_DST, 0);
+        dev = mapper_signal_get_device(sig);
         printf("\b\b%s -> %s/%s", num_src > 1 ? "]" : "",
-               mapper_device_name(dev), mapper_signal_name(sig));
+               mapper_object_get_prop_str(dev, MAPPER_PROP_NAME, NULL),
+               mapper_object_get_prop_str(sig, MAPPER_PROP_NAME, NULL));
     }
     printf("\n");
 }
@@ -68,9 +69,9 @@ void print_map(mapper_map map, int details) {
 void print_signal(mapper_signal sig, int details) {
     printf("            ");
     if (details)
-        mapper_signal_print(sig, 1);
+        mapper_object_print(sig, 0);
     else
-        printf("%s ", mapper_signal_name(sig));
+        printf("%s ", mapper_object_get_prop_str(sig, MAPPER_PROP_NAME, NULL));
     printf("\n");
 }
 
