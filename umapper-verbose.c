@@ -1,5 +1,5 @@
 
-#include <mapper/mapper.h>
+#include <mpr/mpr.h>
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
@@ -12,7 +12,7 @@ void print_version(){
 
 void print_help(){
     print_version();
-    printf("An ugly front-end to libmapper mapping network.\n");
+    printf("An ugly front-end to libmpr mapping network.\n");
     printf("Usage:\n");
     printf("\t-h\t--help\t\t\t\t\tPrint this help\n");
     printf("\t-v\t--version\t\t\t\tPrint version\n");
@@ -30,48 +30,48 @@ void print_help(){
     printf("\tumapper -l -f\n");
 }
 
-void print_device(mapper_device dev, int details) {
+void print_device(mpr_dev dev, int details) {
     printf("    ");
     if (details)
-        mapper_object_print(dev, 0);
+        mpr_obj_print(dev, 0);
     else {
-        printf("%s", mapper_object_get_prop_str(dev, MAPPER_PROP_NAME, NULL));
+        printf("%s", mpr_obj_get_prop_str(dev, MPR_PROP_NAME, NULL));
         printf("\n");
     }
 }
 
-void print_map(mapper_map map, int details) {
+void print_map(mpr_map map, int details) {
     printf("                     ");
     if (details)
-        mapper_object_print(map, 0);
+        mpr_obj_print(map, 0);
     else {
-        mapper_device dev;
-        mapper_signal sig;
-        int i, num_src = mapper_map_get_num_signals(map, MAPPER_LOC_SRC);
+        mpr_dev dev;
+        mpr_sig sig;
+        int i, num_src = mpr_map_get_num_sigs(map, MPR_LOC_SRC);
         if (num_src > 1)
             printf("[");
         for (i = 0; i < num_src; i++) {
-            sig = mapper_map_get_signal(map, MAPPER_LOC_SRC, i);
-            dev = mapper_signal_get_device(sig);
+            sig = mpr_map_get_sig(map, MPR_LOC_SRC, i);
+            dev = mpr_sig_get_dev(sig);
             printf("%s/%s, ",
-                   mapper_object_get_prop_str(dev, MAPPER_PROP_NAME, NULL),
-                   mapper_object_get_prop_str(sig, MAPPER_PROP_NAME, NULL));
+                   mpr_obj_get_prop_str(dev, MPR_PROP_NAME, NULL),
+                   mpr_obj_get_prop_str(sig, MPR_PROP_NAME, NULL));
         }
-        sig = mapper_map_get_signal(map, MAPPER_LOC_DST, 0);
-        dev = mapper_signal_get_device(sig);
+        sig = mpr_map_get_sig(map, MPR_LOC_DST, 0);
+        dev = mpr_sig_get_dev(sig);
         printf("\b\b%s -> %s/%s", num_src > 1 ? "]" : "",
-               mapper_object_get_prop_str(dev, MAPPER_PROP_NAME, NULL),
-               mapper_object_get_prop_str(sig, MAPPER_PROP_NAME, NULL));
+               mpr_obj_get_prop_str(dev, MPR_PROP_NAME, NULL),
+               mpr_obj_get_prop_str(sig, MPR_PROP_NAME, NULL));
     }
     printf("\n");
 }
 
-void print_signal(mapper_signal sig, int details) {
+void print_signal(mpr_sig sig, int details) {
     printf("            ");
     if (details)
-        mapper_object_print(sig, 0);
+        mpr_obj_print(sig, 0);
     else
-        printf("%s ", mapper_object_get_prop_str(sig, MAPPER_PROP_NAME, NULL));
+        printf("%s ", mpr_obj_get_prop_str(sig, MPR_PROP_NAME, NULL));
     printf("\n");
 }
 
