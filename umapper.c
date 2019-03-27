@@ -162,8 +162,12 @@ int main(int argc, char * argv[])
             if (slash) {
                 slash[0] = '\0';
                 mpr_dev dev = find_dev_by_name(graph, src_name);
-                if (dev)
-                    src = find_sig_by_name(dev, slash+1);
+                if (!dev) {
+                    printf("error(map): source device '%s' not found.\n",
+                           src_name);
+                    break;
+                }
+                src = find_sig_by_name(dev, slash+1);
             }
             if (!src) {
                 printf("error(map): source signal '%s:%s' not found.\n",
@@ -174,8 +178,12 @@ int main(int argc, char * argv[])
             if (slash) {
                 slash[0] = '\0';
                 mpr_dev dev = find_dev_by_name(graph, dst_name);
-                if (dev)
-                    dst = find_sig_by_name(dev, slash+1);
+                if (!dev) {
+                    printf("error(map): destination device '%s' not found.\n",
+                           src_name);
+                    break;
+                }
+                dst = find_sig_by_name(dev, slash+1);
             }
             if (!dst) {
                 printf("error(map): destination signal '%s:%s' not found.\n",
@@ -268,7 +276,7 @@ void create_graph(void) {
     if (!graph)
         exit(0);
 //    mpr_graph_request_devices(graph);
-    mpr_graph_poll(graph, 100);
+    mpr_graph_poll(graph, 1000);
 }
 
 void list_devices(void) {
