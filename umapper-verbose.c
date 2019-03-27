@@ -47,7 +47,7 @@ void print_map(mapper_map map, int details) {
         mapper_device dev;
         mapper_signal sig;
         mapper_slot slot;
-        int i, num_src = mapper_map_num_sources(map);
+        int i, num_src = mapper_map_num_slots(map, MAPPER_LOC_SOURCE);
         if (num_src > 1)
             printf("[");
         for (i = 0; i < num_src; i++) {
