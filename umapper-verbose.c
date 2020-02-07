@@ -35,7 +35,7 @@ void print_device(mpr_dev dev, int details) {
     if (details)
         mpr_obj_print(dev, 0);
     else {
-        printf("%s", mpr_obj_get_prop_str(dev, MPR_PROP_NAME, NULL));
+        printf("%s", mpr_obj_get_prop_as_str(dev, MPR_PROP_NAME, NULL));
         printf("\n");
     }
 }
@@ -54,14 +54,14 @@ void print_map(mpr_map map, int details) {
             sig = mpr_map_get_sig(map, MPR_LOC_SRC, i);
             dev = mpr_sig_get_dev(sig);
             printf("%s/%s, ",
-                   mpr_obj_get_prop_str(dev, MPR_PROP_NAME, NULL),
-                   mpr_obj_get_prop_str(sig, MPR_PROP_NAME, NULL));
+                   mpr_obj_get_prop_as_str(dev, MPR_PROP_NAME, NULL),
+                   mpr_obj_get_prop_as_str(sig, MPR_PROP_NAME, NULL));
         }
         sig = mpr_map_get_sig(map, MPR_LOC_DST, 0);
         dev = mpr_sig_get_dev(sig);
         printf("\b\b%s -> %s/%s", num_src > 1 ? "]" : "",
-               mpr_obj_get_prop_str(dev, MPR_PROP_NAME, NULL),
-               mpr_obj_get_prop_str(sig, MPR_PROP_NAME, NULL));
+               mpr_obj_get_prop_as_str(dev, MPR_PROP_NAME, NULL),
+               mpr_obj_get_prop_as_str(sig, MPR_PROP_NAME, NULL));
     }
     printf("\n");
 }
@@ -71,7 +71,7 @@ void print_signal(mpr_sig sig, int details) {
     if (details)
         mpr_obj_print(sig, 0);
     else
-        printf("%s ", mpr_obj_get_prop_str(sig, MPR_PROP_NAME, NULL));
+        printf("%s ", mpr_obj_get_prop_as_str(sig, MPR_PROP_NAME, NULL));
     printf("\n");
 }
 

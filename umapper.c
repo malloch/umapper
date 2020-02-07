@@ -55,7 +55,7 @@ static mpr_dev find_dev_by_name(mpr_graph g, const char *name)
 {
     if (!g)
         return 0;
-    mpr_list list = mpr_graph_get_list(g, MPR_DEV);
+    mpr_list list = mpr_graph_get_objs(g, MPR_DEV);
     list = mpr_list_filter(list, MPR_PROP_NAME, NULL, 1, MPR_STR, name, MPR_OP_EQ);
     mpr_dev *dev = list ? *list : NULL;
     mpr_list_free(list);
@@ -206,11 +206,11 @@ int main(int argc, char * argv[])
             mpr_obj_print(map, 0);
             mpr_obj_push(map);
 
-            if (!mpr_map_ready(map)) {
+            if (!mpr_map_get_is_ready(map)) {
                 // wait another second
                 mpr_graph_poll(graph, 5000);
             }
-            if (mpr_map_ready(map)) {
+            if (mpr_map_get_is_ready(map)) {
                 printf("mapped: "),
                 print_map(map, full_detail_arg);
             }
@@ -252,15 +252,15 @@ int main(int argc, char * argv[])
                 printf("error(unmap): destination signal has no incoming maps.\n");
                 break;
             }
-            mpr_list both = mpr_list_isect(out, in);
+            mpr_list both = mpr_list_get_isect(out, in);
             if (!both) {
                 printf("error(unmap): no maps found from '%s:%s' to '%s:%s'.\n",
-                       src_name, mpr_obj_get_prop_str(src, MPR_PROP_NAME, NULL),
+                       src_name, mpr_obj_get_prop_as_str(src, MPR_PROP_NAME, NULL),
                        dst_name, slash+1);
             }
             while (both) {
                 mpr_map_release(*both);
-                both = mpr_list_next(both);
+                both = mpr_list_get_next(both);
             }
         }
             break;
@@ -275,12 +275,11 @@ void create_graph(void) {
     graph = mpr_graph_new(MPR_OBJ);
     if (!graph)
         exit(0);
-//    mpr_graph_request_devices(graph);
     mpr_graph_poll(graph, 1000);
 }
 
 void list_devices(void) {
-    mpr_list devs = mpr_graph_get_list(graph, MPR_DEV);
+    mpr_list devs = mpr_graph_get_objs(graph, MPR_DEV);
     if (devs)
         printf("Devices:\n");
     while (devs) {
@@ -293,7 +292,7 @@ void list_devices(void) {
                 printf("        input signals:\n");
             while (sigs) {
                 print_signal(*sigs, full_detail_arg);
-                sigs = mpr_list_next(sigs);
+                sigs = mpr_list_get_next(sigs);
             }
             sigs = mpr_dev_get_sigs(dev, MPR_DIR_OUT);
             if (sigs)
@@ -306,13 +305,13 @@ void list_devices(void) {
                         printf("                Maps:\n");
                     while (maps){
                         print_map(*maps, full_detail_arg);
-                        maps = mpr_list_next(maps);
+                        maps = mpr_list_get_next(maps);
                     }
                 }
-                sigs = mpr_list_next(sigs);
+                sigs = mpr_list_get_next(sigs);
             }
         }
-        devs = mpr_list_next(devs);
+        devs = mpr_list_get_next(devs);
     }
 }
 
