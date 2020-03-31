@@ -47,21 +47,36 @@ void print_map(mpr_map map, int details) {
     else {
         mpr_dev dev;
         mpr_sig sig;
-        int i, num_src = mpr_map_get_num_sigs(map, MPR_LOC_SRC);
-        if (num_src > 1)
+
+        // sources
+        mpr_list list = mpr_map_get_sigs(map, MPR_LOC_SRC);
+        int size = mpr_list_get_size(list);
+        if (size > 1)
             printf("[");
-        for (i = 0; i < num_src; i++) {
-            sig = mpr_map_get_sig(map, MPR_LOC_SRC, i);
+        while (list) {
+            sig = (mpr_sig)*list;
             dev = mpr_sig_get_dev(sig);
             printf("%s/%s, ",
                    mpr_obj_get_prop_as_str(dev, MPR_PROP_NAME, NULL),
                    mpr_obj_get_prop_as_str(sig, MPR_PROP_NAME, NULL));
+            list = mpr_list_get_next(list);
         }
-        sig = mpr_map_get_sig(map, MPR_LOC_DST, 0);
-        dev = mpr_sig_get_dev(sig);
-        printf("\b\b%s -> %s/%s", num_src > 1 ? "]" : "",
-               mpr_obj_get_prop_as_str(dev, MPR_PROP_NAME, NULL),
-               mpr_obj_get_prop_as_str(sig, MPR_PROP_NAME, NULL));
+        printf("\b\b%s -> ", size > 1 ? "]" : "");
+
+        // destinations
+        list = mpr_map_get_sigs(map, MPR_LOC_DST);
+        size = mpr_list_get_size(list);
+        if (size > 1)
+            printf("[");
+        while (list) {
+            sig = (mpr_sig)*list;
+            dev = mpr_sig_get_dev(sig);
+            printf("%s/%s, ",
+                   mpr_obj_get_prop_as_str(dev, MPR_PROP_NAME, NULL),
+                   mpr_obj_get_prop_as_str(sig, MPR_PROP_NAME, NULL));
+            list = mpr_list_get_next(list);
+        }
+        printf("\b\b%s", size > 1 ? "]" : "");
     }
     printf("\n");
 }
