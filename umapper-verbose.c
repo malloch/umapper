@@ -1,5 +1,5 @@
 
-#include <mpr/mpr.h>
+#include <mapper/mapper.h>
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
@@ -12,7 +12,7 @@ void print_version(){
 
 void print_help(){
     print_version();
-    printf("An ugly front-end to libmpr mapping network.\n");
+    printf("An ugly front-end to libmapper mapping network.\n");
     printf("Usage:\n");
     printf("\t-h\t--help\t\t\t\t\tPrint this help\n");
     printf("\t-v\t--version\t\t\t\tPrint version\n");
