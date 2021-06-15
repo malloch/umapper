@@ -26,8 +26,10 @@ void print_help(){
     printf("\t-M\t--map_signals source dest\t\tMap source signal to dest signal.\n");
     printf("\t-U\t--unmap_signals source dest\t\tUnmap source signal to dest signal.\n");
     printf("\n");
-    printf("Example:\n");
+    printf("Examples:\n");
     printf("\tumapper -l -f\n");
+    printf("\tumapper -M srcdev/srcsig dstdev/dstsig @expr \"y=sin(x-1);\"\n");
+    printf("\tumapper -U srcdev/srcsig1 srcdev/srcsig2 dstdev/dstsig\n");
 }
 
 void print_device(mpr_dev dev, int details) {
