@@ -43,13 +43,13 @@ enum t_options {
     UMPR_UNMAP
 } options;
 
-int option= -1;
+int option = -1;
 int full_detail_arg = 0;
 int devices_arg = 0;
 int signals_arg = 0;
 int maps_arg = 0;
-char src_name[256];
-char dst_name[256];
+int num_sigs = 0;
+char *sig_names[10];
 
 static mpr_dev find_dev_by_name(mpr_graph g, const char *name)
 {
@@ -75,6 +75,7 @@ static mpr_sig find_sig_by_name(mpr_dev d, const char *name)
 
 int main(int argc, char * argv[])
 {
+    int i;
     if (argc == 1){
         print_help();
         return 0;
@@ -86,9 +87,7 @@ int main(int argc, char * argv[])
 
     int c;
     int option_index = 0;
-    while ((c = getopt_long(argc, argv,
-                            "hvfadlcsM:U:",
-                            long_options, &option_index)) != -1) {
+    while ((c = getopt_long(argc, argv, "hvfadlmsM:U:", long_options, &option_index)) != -1) {
         switch (c) {
             case 0: printf("Missing argument\n"); break;
             case 'h':
@@ -126,22 +125,22 @@ int main(int argc, char * argv[])
                 option = UMPR_PRINT;
                 break;
             case 'M':
-                strcpy(src_name, optarg);
-                if (optind < argc) {
-                    strcpy(dst_name, argv[optind]);
-                    option = UMPR_MAP;
-                } else {
-                    printf("Dest signal missing");
-                }
-                break;
             case 'U':
-                strcpy(src_name, optarg);
-                if (optind < argc) {
-                    strcpy(dst_name, argv[optind]);
-                    option = UMPR_UNMAP;
-                } else {
-                    printf("Dest signal missing");
+                num_sigs = 0;
+                sig_names[num_sigs++] = strdup(optarg);
+                while (optind < argc) {
+                    if (argv[optind][0] == '-' || argv[optind][0] == '@') {
+                        --optind;
+                        break;
+                    }
+                    sig_names[num_sigs++] = strdup(argv[optind]);
+                    ++optind;
                 }
+                if (num_sigs < 2) {
+                    printf("Need 2 or more signal arguments for Map commands.");
+                    break;
+                }
+                option = (c == 'M') ? UMPR_MAP : UMPR_UNMAP;
                 break;
             case '?': printf("Missing argument\n"); break;
             default: print_help();
@@ -157,59 +156,59 @@ int main(int argc, char * argv[])
         }
             break;
         case UMPR_MAP: {
-            mpr_sig src = 0, dst = 0;
-            char *slash = (char*)strchr(src_name+1, '/');
+            mpr_sig srcs[10], dst = 0;
+            char *slash;
+            for (i = 0; i < num_sigs - 1; i++) {
+                slash = (char*)strchr(sig_names[i] + 1, '/');
+                if (slash) {
+                    slash[0] = '\0';
+                    mpr_dev dev = find_dev_by_name(graph, sig_names[i]);
+                    if (!dev) {
+                        printf("error(map): source device '%s' not found.\n", sig_names[i]);
+                        goto done;
+                    }
+                    srcs[i] = find_sig_by_name(dev, slash + 1);
+                }
+                if (!srcs[i]) {
+                    printf("error(map): source signal '%s:%s' not found.\n",
+                           sig_names[i], slash + 1);
+                    goto done;
+                }
+            }
+            slash = (char*)strchr(sig_names[i] + 1, '/');
             if (slash) {
                 slash[0] = '\0';
-                mpr_dev dev = find_dev_by_name(graph, src_name);
+                mpr_dev dev = find_dev_by_name(graph, sig_names[i]);
                 if (!dev) {
-                    printf("error(map): source device '%s' not found.\n",
-                           src_name);
-                    break;
+                    printf("error(map): destination device '%s' not found.\n", sig_names[i]);
+                    goto done;
                 }
-                src = find_sig_by_name(dev, slash+1);
-            }
-            if (!src) {
-                printf("error(map): source signal '%s:%s' not found.\n",
-                       src_name, slash+1);
-                break;
-            }
-            slash = (char*)strchr(dst_name+1, '/');
-            if (slash) {
-                slash[0] = '\0';
-                mpr_dev dev = find_dev_by_name(graph, dst_name);
-                if (!dev) {
-                    printf("error(map): destination device '%s' not found.\n",
-                           src_name);
-                    break;
-                }
-                dst = find_sig_by_name(dev, slash+1);
+                dst = find_sig_by_name(dev, slash + 1);
             }
             if (!dst) {
                 printf("error(map): destination signal '%s:%s' not found.\n",
-                       dst_name, slash+1);
-                break;
+                       sig_names[i], slash + 1);
+                goto done;
             }
-            mpr_map map = mpr_map_new(1, &src, 1, &dst);
-
+            mpr_map map = mpr_map_new(num_sigs - 1, srcs, 1, &dst);
             // check for properties
             while (++optind < argc) {
-                printf("setting prop '%s' to '%s'\n",
-                       argv[optind]+1, argv[optind+1]);
+                printf("setting prop '%s' to '%s'\n", argv[optind] + 1, argv[optind + 1]);
                 char *propname = argv[optind];
                 if (propname && propname[0] == '@')
-                    mpr_obj_set_prop(map, MPR_PROP_UNKNOWN, propname+1, 1, 's',
-                                     argv[optind+1], 1);
+                    mpr_obj_set_prop(map, MPR_PROP_UNKNOWN, propname + 1, 1, 's',
+                                     argv[optind + 1], 1);
                 ++optind;
             }
 
             mpr_obj_print(map, 0);
             mpr_obj_push(map);
 
-            if (!mpr_map_get_is_ready(map)) {
-                // wait another second
-                mpr_graph_poll(graph, 5000);
+            do {
+                mpr_graph_poll(graph, 1000);
             }
+            while (!mpr_map_get_is_ready(map));
+
             if (mpr_map_get_is_ready(map)) {
                 printf("mapped: "),
                 print_map(map, full_detail_arg);
@@ -217,35 +216,47 @@ int main(int argc, char * argv[])
         }
             break;
         case UMPR_UNMAP: {
-            mpr_sig src = 0, dst = 0;
-            char *slash = (char*)strchr(src_name+1, '/');
+            mpr_sig srcs[10], dst = 0;
+            char *slash;
+            for (i = 0; i < num_sigs - 1; i++) {
+                slash = (char*)strchr(sig_names[i] + 1, '/');
+                if (slash) {
+                    slash[0] = '\0';
+                    mpr_dev dev = find_dev_by_name(graph, sig_names[i]);
+                    if (!dev) {
+                        printf("error(map): source device '%s' not found.\n", sig_names[i]);
+                        goto done;
+                    }
+                    srcs[i] = find_sig_by_name(dev, slash + 1);
+                }
+                if (!srcs[i]) {
+                    printf("error(unmap): source signal '%s:%s' not found.\n",
+                           sig_names[i], slash + 1);
+                    break;
+                }
+            }
+            slash = (char*)strchr(sig_names[i] + 1, '/');
             if (slash) {
                 slash[0] = '\0';
-                mpr_dev dev = find_dev_by_name(graph, src_name);
-                if (dev)
-                    src = find_sig_by_name(dev, slash+1);
-            }
-            if (!src) {
-                printf("error(unmap): source signal '%s:%s' not found.\n",
-                       src_name, slash+1);
-                break;
-            }
-            slash = (char*)strchr(dst_name+1, '/');
-            if (slash) {
-                slash[0] = '\0';
-                mpr_dev dev = find_dev_by_name(graph, dst_name);
-                if (dev)
-                    dst = find_sig_by_name(dev, slash+1);
+                mpr_dev dev = find_dev_by_name(graph, sig_names[i]);
+                if (!dev) {
+                    printf("error(map): destination device '%s' not found.\n", sig_names[i]);
+                    goto done;
+                }
+                dst = find_sig_by_name(dev, slash + 1);
             }
             if (!dst) {
                 printf("error(unmap): destination signal '%s:%s' not found.\n",
-                       dst_name, slash+1);
-                break;
+                       sig_names[i], slash + 1);
+                goto done;
             }
-            mpr_list out = mpr_sig_get_maps(src, MPR_DIR_OUT);
-            if (!out) {
-                printf("error(unmap): source signal has no outgoing maps.\n");
-                break;
+            mpr_list out = mpr_sig_get_maps(srcs[0], MPR_DIR_OUT);
+            for (i = 1; i < num_sigs - 1; i++) {
+                out = mpr_list_get_isect(out, mpr_sig_get_maps(srcs[i], MPR_DIR_OUT));
+                if (!out) {
+                    printf("error(unmap): no maps found with specified source signals.\n");
+                    break;
+                }
             }
             mpr_list in = mpr_sig_get_maps(dst, MPR_DIR_IN);
             if (!in) {
@@ -254,9 +265,7 @@ int main(int argc, char * argv[])
             }
             mpr_list both = mpr_list_get_isect(out, in);
             if (!both) {
-                printf("error(unmap): no maps found from '%s:%s' to '%s:%s'.\n",
-                       src_name, mpr_obj_get_prop_as_str(src, MPR_PROP_NAME, NULL),
-                       dst_name, slash+1);
+                printf("error(unmap): no maps found between specified signals.\n");
             }
             while (both) {
                 mpr_map_release(*both);
@@ -265,7 +274,9 @@ int main(int argc, char * argv[])
         }
             break;
     }
-
+done:
+    for (i = 0; i < num_sigs; i++)
+        free(sig_names[i]);
     if (graph)
         mpr_graph_free(graph);
     return 0;
