@@ -55,7 +55,7 @@ static mpr_dev find_dev_by_name(mpr_graph g, const char *name)
 {
     if (!g)
         return 0;
-    mpr_list list = mpr_graph_get_objs(g, MPR_DEV);
+    mpr_list list = mpr_graph_get_list(g, MPR_DEV);
     list = mpr_list_filter(list, MPR_PROP_NAME, NULL, 1, MPR_STR, name, MPR_OP_EQ);
     mpr_dev *dev = list ? *list : NULL;
     mpr_list_free(list);
@@ -290,7 +290,7 @@ void create_graph(void) {
 }
 
 void list_devices(void) {
-    mpr_list devs = mpr_graph_get_objs(graph, MPR_DEV);
+    mpr_list devs = mpr_graph_get_list(graph, MPR_DEV);
     if (devs)
         printf("Devices:\n");
     while (devs) {
