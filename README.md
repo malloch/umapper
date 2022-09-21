@@ -7,18 +7,20 @@ A command line tool for interacting with distributed signal networks using [libm
 umapper offers a simple method for mapping signals between devices at **runtime**. Suppose for this example that you have two libmapper devices, a producer and a consumer that are defined in **Python 3** as follows:
 
 ```python
-import mapper as mpr
+import libmapper as mpr
 
-producer = mpr.device("Producer")
-consumer = mpr.device("Consumer")
+producer = mpr.Device("Producer")
+consumer = mpr.Device("Consumer")
 ```
 
 Each of the devices have one signal that we will map with umapper.
 
 ```python
-producer.add_signal(mpr.DIR_OUT, "Producer-Signal", 1, mpr.INT32)
+producer.add_signal(mpr.Direction.OUTGOING, "Producer-Signal",
+                    1, mpr.Type.INT32)
 
-consumer.add_signal(mpr.DIR_IN, "Consumer-Signal", 1, mpr.INT32)
+consumer.add_signal(mpr.Direction.INCOMING, "Consumer-Signal",
+                    1, mpr.Type.INT32)
 ```
 
 After polling each of the devices, they will enter the ready state and be visible to umapper. To view all libmapper devices currently ready, issue the command:

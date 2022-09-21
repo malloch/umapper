@@ -78,7 +78,7 @@ void print_map(mpr_map map, int details) {
                    mpr_obj_get_prop_as_str(sig, MPR_PROP_NAME, NULL));
             list = mpr_list_get_next(list);
         }
-        printf("\b\b%s", size > 1 ? "]" : "");
+        printf("\b\b%s", size > 1 ? "]" : " ");
     }
     printf("\n");
 }
