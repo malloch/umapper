@@ -153,8 +153,8 @@ int main(int argc, char * argv[])
     switch(option) {
         case UMPR_PRINT: {
             list_devices();
-        }
             break;
+        }
         case UMPR_MAP: {
             mpr_sig srcs[10], dst = 0;
             char *slash;
@@ -203,18 +203,8 @@ int main(int argc, char * argv[])
 
             mpr_obj_print(map, 0);
             mpr_obj_push(map);
-
-            do {
-                mpr_graph_poll(graph, 1000);
-            }
-            while (!mpr_map_get_is_ready(map));
-
-            if (mpr_map_get_is_ready(map)) {
-                printf("mapped: "),
-                print_map(map, full_detail_arg);
-            }
-        }
             break;
+        }
         case UMPR_UNMAP: {
             mpr_sig srcs[10], dst = 0;
             char *slash;
@@ -271,8 +261,8 @@ int main(int argc, char * argv[])
                 mpr_map_release(*both);
                 both = mpr_list_get_next(both);
             }
-        }
             break;
+        }
     }
 done:
     for (i = 0; i < num_sigs; i++)
