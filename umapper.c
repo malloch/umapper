@@ -201,7 +201,7 @@ int main(int argc, char * argv[])
                 ++optind;
             }
 
-            mpr_obj_print(map, 0);
+            mpr_obj_print(map, 1);
             mpr_obj_push(map);
             break;
         }
